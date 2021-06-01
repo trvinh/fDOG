@@ -92,7 +92,7 @@ def main():
         sys.exit()
     # get ncbi taxonomy database for ete3
     print('Creating local NCBI taxonomy database...')
-    ncbi = NCBITaxa()
+    NCBITaxa()
     # run setup
     if conda:
         setupFile = '%s/setup/setup_conda.sh -o %s' % (fdogPath, outPath)
