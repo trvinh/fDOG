@@ -22,6 +22,7 @@ import subprocess
 from pathlib import Path
 import shutil
 
+
 def query_yes_no(question, default='yes'):
     valid = {'yes': True, 'y': True, 'ye': True,
              'no': False, 'n': False}
@@ -44,14 +45,22 @@ def query_yes_no(question, default='yes'):
             sys.stdout.write('Please respond with "yes" or "no" '
                              '(or "y" or "n").\n')
 
+
 def main():
     version = '0.0.1'
-    parser = argparse.ArgumentParser(description='You are running fdog.remove version ' + str(version) + '.')
-    parser.add_argument('--data', help='Remove fdog together with all files/data within the installed fdog directory', action='store_true', default=False)
+    parser = argparse.ArgumentParser(
+        description='You are running fdog.remove version ' +
+        str(version) +
+        '.')
+    parser.add_argument(
+        '--data',
+        help='Remove fdog together with all files/data within the installed fdog directory',
+        action='store_true',
+        default=False)
     args = parser.parse_args()
     data = args.data
 
-    fdogPath = os.path.realpath(__file__).replace('/removefDog.py','')
+    fdogPath = os.path.realpath(__file__).replace('/removefDog.py', '')
     pathconfigFile = fdogPath + '/bin/pathconfig.txt'
     if not os.path.exists(pathconfigFile):
         sys.exit('No pathconfig.txt found. Please run fdog.setup (https://github.com/BIONF/fDOG/wiki/Installation#setup-fdog).')
@@ -59,27 +68,33 @@ def main():
         dataPath = f.readline().strip()
 
     if data:
-        print('All files and folders in %s will be removed! Enter to continue' % fdogPath)
+        print(
+            'All files and folders in %s will be removed! Enter to continue' %
+            fdogPath)
     else:
-        print('fdog will be uninstalled. Some files/data still can be found in %s! Enter to continue' % fdogPath)
+        print(
+            'fdog will be uninstalled. Some files/data still can be found in %s! Enter to continue' %
+            fdogPath)
     if query_yes_no('Are you sure?'):
         if data:
             folders = ['bin', 'core_orthologs', 'taxonomy', 'data']
             for f in folders:
-                dirPath = fdogPath+'/'+f
+                dirPath = fdogPath + '/' + f
                 if os.path.exists(os.path.abspath(dirPath)):
                     print('removing %s...' % f)
                     shutil.rmtree(dirPath)
         uninstallCmd = 'pip uninstall fdog'
         try:
-            subprocess.call([uninstallCmd], shell = True)
-        except:
-            print('Error by uninstalling fdog. Please manually uninstall it using pip uninstall fdog')
+            subprocess.call([uninstallCmd], shell=True)
+        except BaseException:
+            print(
+                'Error by uninstalling fdog. Please manually uninstall it using pip uninstall fdog')
         if data:
             if os.path.exists(os.path.abspath(fdogPath)):
                 shutil.rmtree(fdogPath)
 
     print('NOTE: fdog genome data are still available at %s.' % dataPath)
+
 
 if __name__ == '__main__':
     main()

@@ -35,17 +35,22 @@ import re
 import shutil
 from datetime import datetime
 
+
 def checkFileExist(file):
     if not os.path.exists(os.path.abspath(file)):
         sys.exit('%s not found' % file)
 
+
 def checkOptConflict(replace, delete):
     if delete:
         if replace:
-            sys.exit('*** ERROR: only one option can be choose between "--replace" and "--delete"')
+            sys.exit(
+                '*** ERROR: only one option can be choose between "--replace" and "--delete"')
     if replace:
         if delete:
-            sys.exit('*** ERROR: only one option can be choose between "--replace" and "--delete"')
+            sys.exit(
+                '*** ERROR: only one option can be choose between "--replace" and "--delete"')
+
 
 def checkTaxId(taxId):
     ncbi = NCBITaxa()
@@ -54,51 +59,120 @@ def checkTaxId(taxId):
         tmp = ncbi.get_rank([taxId])
         rank = tmp[int(taxId)]
         if not rank == 'species':
-            print('\033[92mWARNING: rank of %s is not SPECIES (%s)\033[0m' % (taxId, rank))
+            print(
+                '\033[92mWARNING: rank of %s is not SPECIES (%s)\033[0m' %
+                (taxId, rank))
         else:
-            print('\033[92mNCBI taxon info: %s %s\033[0m' % (taxId, ncbi.get_taxid_translator([taxId])[int(taxId)]))
-    except:
-        print('\033[92mWARNING: %s not found in NCBI taxonomy database!\033[0m' % taxId)
+            print('\033[92mNCBI taxon info: %s %s\033[0m' %
+                  (taxId, ncbi.get_taxid_translator([taxId])[int(taxId)]))
+    except BaseException:
+        print(
+            '\033[92mWARNING: %s not found in NCBI taxonomy database!\033[0m' %
+            taxId)
+
 
 def getTaxName(taxId):
     ncbi = NCBITaxa()
     try:
         ncbiName = ncbi.get_taxid_translator([taxId])[int(taxId)]
-        ncbiName = re.sub('[^a-zA-Z1-9\s]+', '', ncbiName)
+        ncbiName = re.sub('[^a-zA-Z1-9\\s]+', '', ncbiName)
         taxName = ncbiName.split()
-        name = taxName[0][:3].upper()+taxName[1][:2].upper()
-    except:
+        name = taxName[0][:3].upper() + taxName[1][:2].upper()
+    except BaseException:
         name = "UNK" + taxId
     return(name)
 
+
 def runBlast(args):
     (specName, specFile, outPath) = args
-    blastCmd = 'makeblastdb -dbtype prot -in %s -out %s/blast_dir/%s/%s' % (specFile, outPath, specName, specName)
+    blastCmd = 'makeblastdb -dbtype prot -in %s -out %s/blast_dir/%s/%s' % (
+        specFile, outPath, specName, specName)
     try:
-        subprocess.call([blastCmd], shell = True)
-    except:
+        subprocess.call([blastCmd], shell=True)
+    except BaseException:
         sys.exit('Problem with running %s' % blastCmd)
     fileInGenome = "../../genome_dir/%s/%s.fa" % (specName, specName)
     fileInBlast = "%s/blast_dir/%s/%s.fa" % (outPath, specName, specName)
     if not Path(fileInBlast).exists():
         os.symlink(fileInGenome, fileInBlast)
 
+
 def main():
     version = '0.0.10'
-    parser = argparse.ArgumentParser(description='You are running fdog.addTaxon version ' + str(version) + '.')
+    parser = argparse.ArgumentParser(
+        description='You are running fdog.addTaxon version ' +
+        str(version) +
+        '.')
     required = parser.add_argument_group('required arguments')
     optional = parser.add_argument_group('optional arguments')
-    required.add_argument('-f', '--fasta', help='FASTA file of input taxon', action='store', default='', required=True)
-    required.add_argument('-i', '--taxid', help='Taxonomy ID of input taxon', action='store', default='', required=True, type=int)
-    optional.add_argument('-o', '--outPath', help='Path to output directory', action='store', default='')
-    optional.add_argument('-n', '--name', help='Acronym name of input taxon', action='store', default='', type=str)
-    optional.add_argument('-v', '--verProt', help='Proteome version', action='store', default='', type=str)
-    optional.add_argument('-c', '--coreTaxa', help='Include this taxon to core taxa (i.e. taxa in blast_dir folder)', action='store_true', default=False)
-    optional.add_argument('-a', '--noAnno', help='Do NOT annotate this taxon using fas.doAnno', action='store_true', default=False)
-    optional.add_argument('--cpus', help='Number of CPUs used for annotation. Default = available cores - 1', action='store', default=0, type=int)
-    optional.add_argument('--replace', help='Replace special characters in sequences by "X"', action='store_true', default=False)
-    optional.add_argument('--delete', help='Delete special characters in sequences', action='store_true', default=False)
-    optional.add_argument('--force', help='Force overwrite existing data', action='store_true', default=False)
+    required.add_argument(
+        '-f',
+        '--fasta',
+        help='FASTA file of input taxon',
+        action='store',
+        default='',
+        required=True)
+    required.add_argument(
+        '-i',
+        '--taxid',
+        help='Taxonomy ID of input taxon',
+        action='store',
+        default='',
+        required=True,
+        type=int)
+    optional.add_argument(
+        '-o',
+        '--outPath',
+        help='Path to output directory',
+        action='store',
+        default='')
+    optional.add_argument(
+        '-n',
+        '--name',
+        help='Acronym name of input taxon',
+        action='store',
+        default='',
+        type=str)
+    optional.add_argument(
+        '-v',
+        '--verProt',
+        help='Proteome version',
+        action='store',
+        default='',
+        type=str)
+    optional.add_argument(
+        '-c',
+        '--coreTaxa',
+        help='Include this taxon to core taxa (i.e. taxa in blast_dir folder)',
+        action='store_true',
+        default=False)
+    optional.add_argument(
+        '-a',
+        '--noAnno',
+        help='Do NOT annotate this taxon using fas.doAnno',
+        action='store_true',
+        default=False)
+    optional.add_argument(
+        '--cpus',
+        help='Number of CPUs used for annotation. Default = available cores - 1',
+        action='store',
+        default=0,
+        type=int)
+    optional.add_argument(
+        '--replace',
+        help='Replace special characters in sequences by "X"',
+        action='store_true',
+        default=False)
+    optional.add_argument(
+        '--delete',
+        help='Delete special characters in sequences',
+        action='store_true',
+        default=False)
+    optional.add_argument(
+        '--force',
+        help='Force overwrite existing data',
+        action='store_true',
+        default=False)
 
     args = parser.parse_args()
 
@@ -107,12 +181,13 @@ def main():
     name = args.name.upper()
     taxId = str(args.taxid)
     # outPath = str(Path(args.outPath).resolve())
-    outPath = args.outPath #str(Path(args.outPath).resolve())
+    outPath = args.outPath  # str(Path(args.outPath).resolve())
     if outPath == '':
-        fdogPath = os.path.realpath(__file__).replace('/addTaxon.py','')
+        fdogPath = os.path.realpath(__file__).replace('/addTaxon.py', '')
         pathconfigFile = fdogPath + '/bin/pathconfig.txt'
         if not os.path.exists(pathconfigFile):
-            sys.exit('No pathconfig.txt found. Please run fdog.setup (https://github.com/BIONF/fDOG/wiki/Installation#setup-fdog).')
+            sys.exit(
+                'No pathconfig.txt found. Please run fdog.setup (https://github.com/BIONF/fDOG/wiki/Installation#setup-fdog).')
         with open(pathconfigFile) as f:
             outPath = f.readline().strip()
     outPath = os.path.abspath(outPath)
@@ -123,35 +198,36 @@ def main():
         ver = datetime.today().strftime('%y%m%d')
     cpus = args.cpus
     if cpus == 0:
-        cpus = mp.cpu_count()-2
+        cpus = mp.cpu_count() - 2
     replace = args.replace
     delete = args.delete
     checkOptConflict(replace, delete)
     force = args.force
 
-    ### species name after fdog naming scheme
+    # species name after fdog naming scheme
     checkTaxId(taxId)
     if name == "":
         name = getTaxName(taxId)
-    specName = name+'@'+taxId+'@'+ver
+    specName = name + '@' + taxId + '@' + ver
     print('Species name\t%s' % specName)
 
-    ### remove old folder if force is set
+    # remove old folder if force is set
     if force:
         if os.path.exists(outPath + '/genome_dir/' + specName):
             shutil.rmtree(outPath + '/genome_dir/' + specName)
         if os.path.exists(outPath + '/blast_dir/' + specName):
             shutil.rmtree(outPath + '/blast_dir/' + specName)
 
-    ### create file in genome_dir
+    # create file in genome_dir
     print('Parsing FASTA file...')
-    Path(outPath + '/genome_dir').mkdir(parents = True, exist_ok = True)
+    Path(outPath + '/genome_dir').mkdir(parents=True, exist_ok=True)
     genomePath = outPath + '/genome_dir/' + specName
-    Path(genomePath).mkdir(parents = True, exist_ok = True)
+    Path(genomePath).mkdir(parents=True, exist_ok=True)
     # load fasta seq
     inSeq = SeqIO.to_dict((SeqIO.parse(open(faIn), 'fasta')))
     specFile = genomePath + '/' + specName + '.fa'
-    if (not os.path.exists(os.path.abspath(specFile))) or (os.stat(specFile).st_size == 0) or force:
+    if (not os.path.exists(os.path.abspath(specFile))) or (
+            os.stat(specFile).st_size == 0) or force:
         f = open(specFile, 'w')
         index = 0
         modIdIndex = 0
@@ -163,11 +239,14 @@ def main():
             # check ID
             # oriId = id
             if ' ' in id:
-                sys.exit('\033[91mERROR: Sequence IDs (e.g. %s) must not contain space(s)!\033[0m' % id)
+                sys.exit(
+                    '\033[91mERROR: Sequence IDs (e.g. %s) must not contain space(s)!\033[0m' %
+                    id)
             else:
-                if '\|' in id:
-                    print('\033[91mWARNING: Sequence IDs contain pipe(s). They will be replaced by "_"!\033[0m')
-                    id = re.sub('\|', '_', id)
+                if '\\|' in id:
+                    print(
+                        '\033[91mWARNING: Sequence IDs contain pipe(s). They will be replaced by "_"!\033[0m')
+                    id = re.sub('\\|', '_', id)
             # if len(id) > 20:
             #     modIdIndex = modIdIndex + 1
             #     id = modIdIndex
@@ -192,11 +271,13 @@ def main():
                     if delete:
                         seq = re.sub('[^a-zA-Z]', '', seq)
                 else:
-                    sys.exit('\033[91mERROR: %s sequence contains special character!\033[0m\nYou can use --replace or --delete to solve it.' % (id))
+                    sys.exit(
+                        '\033[91mERROR: %s sequence contains special character!\033[0m\nYou can use --replace or --delete to solve it.' %
+                        (id))
             f.write('>%s\n%s\n' % (id, seq))
         f.close()
         # write .checked file
-        cf = open(specFile+'.checked', 'w')
+        cf = open(specFile + '.checked', 'w')
         cf.write(str(datetime.now()))
         cf.close()
         # warning about long header
@@ -205,30 +286,37 @@ def main():
     else:
         print(genomePath + '/' + specName + '.fa already exists!')
 
-    ### create blast db
+    # create blast db
     if coreTaxa:
         print('Creating Blast DB...')
-        Path(outPath + '/blast_dir').mkdir(parents = True, exist_ok = True)
-        if (not os.path.exists(os.path.abspath(outPath + '/blast_dir/' + specName + '/' + specName + '.phr'))) or force:
+        Path(outPath + '/blast_dir').mkdir(parents=True, exist_ok=True)
+        if (not os.path.exists(os.path.abspath(outPath + '/blast_dir/' + \
+            specName + '/' + specName + '.phr'))) or force:
             try:
                 runBlast([specName, specFile, outPath])
-            except:
+            except BaseException:
                 print('\033[91mProblem with creating BlastDB.\033[0m')
         else:
             print('Blast DB already exists!')
 
-    ### create annotation
+    # create annotation
     if not noAnno:
-        Path(outPath + '/weight_dir').mkdir(parents = True, exist_ok = True)
-        annoCmd = 'fas.doAnno -i %s/%s.fa -o %s --cpus %s' % (genomePath, specName, outPath+'/weight_dir', cpus)
+        Path(outPath + '/weight_dir').mkdir(parents=True, exist_ok=True)
+        annoCmd = 'fas.doAnno -i %s/%s.fa -o %s --cpus %s' % (
+            genomePath, specName, outPath + '/weight_dir', cpus)
         if force:
             annoCmd = annoCmd + " --force"
         try:
-            subprocess.call([annoCmd], shell = True)
-        except:
-            print('\033[91mProblem with running fas.doAnno. You can check it with this command:\n%s\033[0m' % annoCmd)
+            subprocess.call([annoCmd], shell=True)
+        except BaseException:
+            print(
+                '\033[91mProblem with running fas.doAnno. You can check it with this command:\n%s\033[0m' %
+                annoCmd)
 
-    print('Output for %s can be found in %s within genome_dir [and blast_dir, weight_dir] folder[s]' % (specName, outPath))
+    print(
+        'Output for %s can be found in %s within genome_dir [and blast_dir, weight_dir] folder[s]' %
+        (specName, outPath))
+
 
 if __name__ == '__main__':
     main()

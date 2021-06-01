@@ -19,22 +19,25 @@ import sys
 import os
 from ete3 import NCBITaxa
 
+
 def checkFileExist(file):
     if not os.path.exists(os.path.abspath(file)):
         sys.exit('%s not found' % file)
+
 
 def getNcbiName(taxonName):
     ncbi = NCBITaxa()
     taxId = taxonName.split('@')[1]
     try:
         name = ncbi.get_taxid_translator([taxId])[int(taxId)]
-    except:
+    except BaseException:
         name = taxonName
     return(name)
 
+
 def getTaxa():
     # get data path
-    fdogPath = os.path.realpath(__file__).replace('/showTaxa.py','')
+    fdogPath = os.path.realpath(__file__).replace('/showTaxa.py', '')
     pathconfigFile = fdogPath + '/bin/pathconfig.txt'
     if not os.path.exists(pathconfigFile):
         sys.exit('No pathconfig.txt found. Please run fdog.setup (https://github.com/BIONF/fDOG/wiki/Installation#setup-fdog).')
@@ -54,8 +57,10 @@ def getTaxa():
         if os.path.isdir(dataPath + '/genome_dir/' + taxon):
             print('%s\t%s' % (taxon, getNcbiName(taxon)))
 
+
 def main():
     getTaxa()
+
 
 if __name__ == '__main__':
     main()

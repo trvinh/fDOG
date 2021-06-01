@@ -28,11 +28,13 @@ import re
 from datetime import datetime
 import csv
 
+
 def checkFileExist(file):
     if not os.path.exists(os.path.abspath(file)):
         sys.exit('%s not found' % file)
 
-def countLine(file,pattern,contain):
+
+def countLine(file, pattern, contain):
     nline = 0
     with open(file, 'r') as f:
         for line in f:
@@ -40,9 +42,10 @@ def countLine(file,pattern,contain):
                 if pattern in line:
                     nline = nline + 1
             else:
-                if not pattern in line:
+                if pattern not in line:
                     nline = nline + 1
     return(nline)
+
 
 def join2Lists(first_list, second_list):
     in_first = set(first_list)
@@ -51,16 +54,21 @@ def join2Lists(first_list, second_list):
     out = first_list + list(in_second_but_not_in_first)
     return(out)
 
+
 def checkOptConflict(concat, replace, delete):
     if concat:
         if not (delete or replace):
-            sys.exit('*** ERROR: for rewrite sequences, you need to set either "--delete" or "--replace"!')
+            sys.exit(
+                '*** ERROR: for rewrite sequences, you need to set either "--delete" or "--replace"!')
     if delete:
         if replace:
-            sys.exit('*** ERROR: only one option can be choose between "--replace" and "--delete"')
+            sys.exit(
+                '*** ERROR: only one option can be choose between "--replace" and "--delete"')
     if replace:
         if delete:
-            sys.exit('*** ERROR: only one option can be choose between "--replace" and "--delete"')
+            sys.exit(
+                '*** ERROR: only one option can be choose between "--replace" and "--delete"')
+
 
 def checkValidFasta(file):
     spaceChr = (' ', '\t')
@@ -86,26 +94,33 @@ def checkValidFasta(file):
         return('multiLine')
     return('ok')
 
+
 def checkValidFolderName(folder):
-    invalidChr = (' ','|','\t','\'','"','`','´','^','!','$','%','&')
+    invalidChr = (' ', '|', '\t', '\'', '"', '`', '´', '^', '!', '$', '%', '&')
     if any(e in folder for e in invalidChr):
         sys.exit('*** ERROR: Invalid character found in %s' % folder)
 
+
 def checkValidSeqs(faFile):
     spaceChr = (' ', '\t')
-    faSeq = SeqIO.parse(open(faFile),'fasta')
+    faSeq = SeqIO.parse(open(faFile), 'fasta')
     for fa in faSeq:
         id, seq = fa.description, str(fa.seq)
         c = ''
         if any(e in id for e in spaceChr):
-            sys.exit('*** ERROR: Invalid character found in \">%s\" in %s' % (id, faFile))
+            sys.exit(
+                '*** ERROR: Invalid character found in \">%s\" in %s' %
+                (id, faFile))
         if any(c for c in seq if not c.isalpha()):
-            print('*** ERROR: Invalid character "%s" found in the sequence of gene \"%s\" in %s' % (c, id, faFile))
+            print(
+                '*** ERROR: Invalid character "%s" found in the sequence of gene \"%s\" in %s' %
+                (c, id, faFile))
             sys.exit('You can use "--replace" or "--delete" to solve this issue!')
+
 
 def rewriteSeqs(faFile, replace, delete):
     spaceChr = (' ', '\t')
-    faSeq = SeqIO.parse(open(faFile),'fasta')
+    faSeq = SeqIO.parse(open(faFile), 'fasta')
     with open(faFile + '.mod', 'w') as tmpOut:
         for fa in faSeq:
             id, seq = fa.description, str(fa.seq)
@@ -116,37 +131,47 @@ def rewriteSeqs(faFile, replace, delete):
             tmpOut.write('>%s\n%s\n' % (id, seq))
     os.replace(faFile + '.mod', faFile)
 
+
 def writeCheckedFile(faFile):
-    with open(faFile+'.checked', 'w') as f:
+    with open(faFile + '.checked', 'w') as f:
         f.write(str(datetime.now()))
+
 
 def checkDataFolder(checkDir, replace, delete, concat):
     taxaList = []
     for fd in listdir(checkDir):
         if not fd.startswith('.'):
             taxon = fd
-            checkValidFolderName(checkDir+'/'+taxon)
+            checkValidFolderName(checkDir + '/' + taxon)
             getFaCmd = 'ls %s/%s/%s.fa*' % (checkDir, taxon, taxon)
             try:
-                faFiles = subprocess.check_output([getFaCmd], shell=True).decode(sys.stdout.encoding).strip().split('\n')
+                faFiles = subprocess.check_output(
+                    [getFaCmd], shell=True).decode(
+                    sys.stdout.encoding).strip().split('\n')
                 for faFile in faFiles:
                     if os.path.islink(faFile):
                         faFile = os.path.realpath(faFile)
                     checkFileExist(faFile)
-                    if not '.mapping' in faFile:
-                        if not '.checked' in faFile:
-                            if not os.path.exists(faFile+".checked"):
+                    if '.mapping' not in faFile:
+                        if '.checked' not in faFile:
+                            if not os.path.exists(faFile + ".checked"):
                                 checkFaFile = checkValidFasta(faFile)
                                 if checkFaFile == 'notFasta':
-                                    sys.exit('*** ERROR: %s does not look like a fasta file!' % faFile)
+                                    sys.exit(
+                                        '*** ERROR: %s does not look like a fasta file!' %
+                                        faFile)
                                 elif checkFaFile == 'longHeader':
-                                    sys.exit('*** ERROR: %s contains long headers!' % faFile)
+                                    sys.exit(
+                                        '*** ERROR: %s contains long headers!' % faFile)
                                 elif checkFaFile == 'space':
-                                    sys.exit('*** ERROR: %s contains spaces/tabs!' % faFile)
+                                    sys.exit(
+                                        '*** ERROR: %s contains spaces/tabs!' % faFile)
                                 elif checkFaFile == 'multiLine':
                                     if not concat:
-                                        print('*** ERROR: %s contains multiple-line sequences!' % faFile)
-                                        sys.exit('Please use "--concat" with "--replace" or "--delete" to join them into single lines')
+                                        print(
+                                            '*** ERROR: %s contains multiple-line sequences!' % faFile)
+                                        sys.exit(
+                                            'Please use "--concat" with "--replace" or "--delete" to join them into single lines')
                                     else:
                                         rewriteSeqs(faFile, replace, delete)
                                 elif checkFaFile == 'ok':
@@ -163,12 +188,14 @@ def checkDataFolder(checkDir, replace, delete, concat):
                 sys.exit()
     return(taxaList)
 
+
 def checkMissingJson(weightDir, taxaList):
     allAnno = [f for f in listdir(weightDir) if isfile(join(weightDir, f))]
     taxaAnno = [s + '.json' for s in taxaList]
     s = set(allAnno)
     missingAnno = [x for x in taxaAnno if x not in s]
     return(missingAnno)
+
 
 def checkCompleteAnno(weightDir, genomeDir):
     allAnno = [f for f in listdir(weightDir) if isfile(join(weightDir, f))]
@@ -179,11 +206,13 @@ def checkCompleteAnno(weightDir, genomeDir):
         gf = '%s/%s/%s.fa' % (genomeDir, tax, tax)
         cmd = 'fas.checkAnno -s %s -a %s -o %s' % (gf, jf, weightDir)
         try:
-            subprocess.call([cmd], shell = True)
+            subprocess.call([cmd], shell=True)
         except subprocess.CalledProcessError as e:
-            print('*** ERROR: Problem while checking annotation file using fas.checkAnno!')
+            print(
+                '*** ERROR: Problem while checking annotation file using fas.checkAnno!')
             print(e.output.decode(sys.stdout.encoding))
             sys.exit()
+
 
 def checkMissingNcbiID(namesDmp, taxaList):
     ncbiId = {}
@@ -191,7 +220,7 @@ def checkMissingNcbiID(namesDmp, taxaList):
         lines = f.readlines()
         for x in lines:
             taxId = x.split('\t')[0]
-            if not taxId in ncbiId:
+            if taxId not in ncbiId:
                 ncbiId[taxId] = 1
     f.close()
     missingTaxa = {}
@@ -199,26 +228,57 @@ def checkMissingNcbiID(namesDmp, taxaList):
     dupTaxa = []
     for t in taxaList:
         taxId = t.split('@')[1]
-        if not taxId in ncbiId:
-            if not t+'\t'+str(taxId) in missingTaxa:
-                missingTaxa[t+'\t'+str(taxId)] = 1
-        if not taxId in presentTaxa:
+        if taxId not in ncbiId:
+            if not t + '\t' + str(taxId) in missingTaxa:
+                missingTaxa[t + '\t' + str(taxId)] = 1
+        if taxId not in presentTaxa:
             presentTaxa[taxId] = t
         else:
             dupTaxa.append('%s\t%s' % (t, presentTaxa[taxId]))
     return(missingTaxa.keys(), dupTaxa)
 
+
 def main():
     version = '0.0.6'
-    parser = argparse.ArgumentParser(description='You are running fdog.checkData version ' + str(version) + '.')
-    parser.add_argument('-g', '--genomeDir', help='Path to search taxa directory (e.g. fdog_dataPath/genome_dir)', action='store', default='')
-    parser.add_argument('-b', '--blastDir', help='Path to blastDB directory (e.g. fdog_dataPath/blast_dir)', action='store', default='')
-    parser.add_argument('-w', '--weightDir', help='Path to feature annotation directory (e.g. fdog_dataPath/weight_dir)', action='store', default='')
-    parser.add_argument('--replace', help='Replace special characters in sequences by "X"', action='store_true', default=False)
-    parser.add_argument('--delete', help='Delete special characters in sequences', action='store_true', default=False)
-    parser.add_argument('--concat', help='Concatenate multiple-line sequences into single-line', action='store_true', default=False)
+    parser = argparse.ArgumentParser(
+        description='You are running fdog.checkData version ' +
+        str(version) +
+        '.')
+    parser.add_argument(
+        '-g',
+        '--genomeDir',
+        help='Path to search taxa directory (e.g. fdog_dataPath/genome_dir)',
+        action='store',
+        default='')
+    parser.add_argument(
+        '-b',
+        '--blastDir',
+        help='Path to blastDB directory (e.g. fdog_dataPath/blast_dir)',
+        action='store',
+        default='')
+    parser.add_argument(
+        '-w',
+        '--weightDir',
+        help='Path to feature annotation directory (e.g. fdog_dataPath/weight_dir)',
+        action='store',
+        default='')
+    parser.add_argument(
+        '--replace',
+        help='Replace special characters in sequences by "X"',
+        action='store_true',
+        default=False)
+    parser.add_argument(
+        '--delete',
+        help='Delete special characters in sequences',
+        action='store_true',
+        default=False)
+    parser.add_argument(
+        '--concat',
+        help='Concatenate multiple-line sequences into single-line',
+        action='store_true',
+        default=False)
 
-    ### get arguments
+    # get arguments
     args = parser.parse_args()
 
     genomeDir = args.genomeDir
@@ -231,8 +291,8 @@ def main():
     checkOptConflict(concat, replace, delete)
     caution = 0
 
-    ### get fdog dir and assign genomeDir, blastDir, weightDir if not given
-    fdogPath = os.path.realpath(__file__).replace('/checkData.py','')
+    # get fdog dir and assign genomeDir, blastDir, weightDir if not given
+    fdogPath = os.path.realpath(__file__).replace('/checkData.py', '')
     pathconfigFile = fdogPath + '/bin/pathconfig.txt'
     if not os.path.exists(pathconfigFile):
         sys.exit('No pathconfig.txt found. Please run fdog.setup (https://github.com/BIONF/fDOG/wiki/Installation#setup-fdog).')
@@ -245,35 +305,48 @@ def main():
     if not weightDir:
         weightDir = dataPath + "/weight_dir"
 
-    ### check genomeDir and blastDir
+    # check genomeDir and blastDir
     print('=> Checking %s...' % genomeDir)
-    genomeTaxa = checkDataFolder(os.path.abspath(genomeDir), replace, delete, concat)
+    genomeTaxa = checkDataFolder(
+        os.path.abspath(genomeDir),
+        replace,
+        delete,
+        concat)
     print('=> Checking %s...' % blastDir)
-    blastTaxa = checkDataFolder(os.path.abspath(blastDir), replace, delete, concat)
+    blastTaxa = checkDataFolder(
+        os.path.abspath(blastDir),
+        replace,
+        delete,
+        concat)
 
-    ### check weightDir
+    # check weightDir
     print('=> Checking %s...' % weightDir)
-    missingAnno = checkMissingJson(weightDir, join2Lists(genomeTaxa, blastTaxa))
+    missingAnno = checkMissingJson(
+        weightDir, join2Lists(
+            genomeTaxa, blastTaxa))
     if len(missingAnno) > 0:
         print('\033[92m*** WARNING: Annotation files not found for:\033[0m')
-        print(*missingAnno, sep = "\n")
+        print(*missingAnno, sep="\n")
         print('NOTE: You still can run fdog without FAS using the option "-fasoff"')
         caution = 1
     checkCompleteAnno(weightDir, genomeDir)
 
-    ### check ncbi IDs
+    # check ncbi IDs
     print('=> Checking NCBI taxonomy IDs...')
     namesDmp = fdogPath + '/taxonomy/names.dmp'
     checkFileExist(namesDmp)
-    missingTaxa, dupTaxa = checkMissingNcbiID(namesDmp, join2Lists(genomeTaxa, blastTaxa))
+    missingTaxa, dupTaxa = checkMissingNcbiID(
+        namesDmp, join2Lists(genomeTaxa, blastTaxa))
     if (len(missingTaxa) > 0):
-        print('\033[92m*** WARNING: Taxa not found in current fdog\'s NCBI taxonomy database:\033[0m')
-        print(*missingTaxa, sep = "\n")
+        print(
+            '\033[92m*** WARNING: Taxa not found in current fdog\'s NCBI taxonomy database:\033[0m')
+        print(*missingTaxa, sep="\n")
         print('NOTE: You still can run fdog, but they will not be included in the core set compilation!')
         caution = 1
     if (len(dupTaxa) > 0):
-        print('\033[92m*** WARNING: These taxa have the same NCBI taxonomy IDs:\033[0m')
-        print(*dupTaxa, sep = "\n")
+        print(
+            '\033[92m*** WARNING: These taxa have the same NCBI taxonomy IDs:\033[0m')
+        print(*dupTaxa, sep="\n")
         print('NOTE: This could lead to some conflicts!')
         caution = 1
 
@@ -282,6 +355,7 @@ def main():
         print('Done! Data are ready to use with caution!')
     else:
         print('Done! Data are ready to use!')
+
 
 if __name__ == '__main__':
     main()
