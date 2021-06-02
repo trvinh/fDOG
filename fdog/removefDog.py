@@ -19,7 +19,6 @@ import sys
 import os
 import argparse
 import subprocess
-from pathlib import Path
 import shutil
 
 
@@ -45,28 +44,7 @@ def query_yes_no(question, default='yes'):
             sys.stdout.write('Please respond with "yes" or "no" '
                              '(or "y" or "n").\n')
 
-
-def main():
-    version = '0.0.1'
-    parser = argparse.ArgumentParser(
-        description='You are running fdog.remove version ' +
-        str(version) +
-        '.')
-    parser.add_argument(
-        '--data',
-        help='Remove fdog together with all files/data within the installed fdog directory',
-        action='store_true',
-        default=False)
-    args = parser.parse_args()
-    data = args.data
-
-    fdogPath = os.path.realpath(__file__).replace('/removefDog.py', '')
-    pathconfigFile = fdogPath + '/bin/pathconfig.txt'
-    if not os.path.exists(pathconfigFile):
-        sys.exit('No pathconfig.txt found. Please run fdog.setup (https://github.com/BIONF/fDOG/wiki/Installation#setup-fdog).')
-    with open(pathconfigFile) as f:
-        dataPath = f.readline().strip()
-
+def removefDog(data, fdogPath, dataPath):
     if data:
         print(
             'All files and folders in %s will be removed! Enter to continue' %
@@ -94,6 +72,29 @@ def main():
                 shutil.rmtree(fdogPath)
 
     print('NOTE: fdog genome data are still available at %s.' % dataPath)
+
+def main():
+    version = '0.0.1'
+    parser = argparse.ArgumentParser(
+        description='You are running fdog.remove version ' +
+        str(version) +
+        '.')
+    parser.add_argument(
+        '--data',
+        help='Remove fdog together with all files/data within the installed fdog directory',
+        action='store_true',
+        default=False)
+    args = parser.parse_args()
+    data = args.data
+
+    fdogPath = os.path.realpath(__file__).replace('/removefDog.py', '')
+    pathconfigFile = fdogPath + '/bin/pathconfig.txt'
+    if not os.path.exists(pathconfigFile):
+        sys.exit('No pathconfig.txt found. Please run fdog.setup (https://github.com/BIONF/fDOG/wiki/Installation#setup-fdog).')
+    with open(pathconfigFile) as f:
+        dataPath = f.readline().strip()
+
+    removefDog(data, fdogPath, dataPath)
 
 
 if __name__ == '__main__':

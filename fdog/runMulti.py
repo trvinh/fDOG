@@ -17,8 +17,7 @@
 
 import sys
 import os
-from os import listdir
-from os.path import isfile, join
+from os.path import isfile
 import time
 import argparse
 import subprocess
@@ -28,7 +27,6 @@ import re
 from tqdm import tqdm
 import fdog.runSingle as fdogFn
 import shutil
-import yaml
 
 
 def getSortedFiles(directory):
@@ -217,7 +215,6 @@ def compileCore(options, seeds, inFol, cpu, outpath):
 def searchOrtho(options, seeds, inFol, cpu, outpath):
     print('Searching orthologs for...')
     start = time.time()
-    coreCompilationJobs = []
     for seed in seeds:
         seqFile = [inFol + '/' + seed]
         seqName = getSeedName(seed)
