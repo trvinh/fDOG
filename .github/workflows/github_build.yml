@@ -52,8 +52,8 @@ jobs:
         mkdir input
         ls
         fdog.checkData -g /home/runner/work/fDOG/fDOG/dt/genome_dir -b /home/runner/work/fDOG/fDOG/dt/blast_dir -w /home/runner/work/fDOG/fDOG/dt/weight_dir
-        cp data/infile.fa input/01.fa
-        cp data/infile.fa input/02.fa
+        cp fdog/data/infile.fa input/01.fa
+        cp fdog/data/infile.fa input/02.fa
         fdogs.run --input input --jobName test_multi --refspec HUMAN@9606@3 --fasoff
         fdog.addTaxon -f input/01.fa -i 559292 -o test_addTaxon -c -a --cpus 4 --force --replace
         ls
