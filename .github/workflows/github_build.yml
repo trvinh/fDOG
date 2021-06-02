@@ -37,11 +37,25 @@ jobs:
     - name: Test
       run: |
         pwd
+        wget https://github.com/BIONF/data4travis/raw/main/dtu/signalp-4.1g.Linux.tar.gz &> /dev/null
+        wget https://github.com/BIONF/data4travis/raw/main/dtu/tmhmm-2.0c.Linux.tar.gz &> /dev/null
+        wget https://applbio.biologie.uni-frankfurt.de/download/hamstr_qfo/annotation_FAS2020d.tar.gz &> /dev/null
         pip install .
         fdog.setup -o /home/runner/work/fDOG/fDOG/dt --lib
         fdog.setup -o /home/runner/work/fDOG/fDOG/dt
+        fas.setup -t /home/runner/work/fDOG/fDOG -d /home/runner/work/fDOG/fDOG
+        less annoTools.txt | grep -v "COILS2" > annoTools.txt.mod
+        mv annoTools.txt.mod annoTools.txt
+        for i in $(ls dt/blast_dir | tail -n 44); do rm -rf dt/blast_dir/$i; rm -rf dt/genome_dir/$i; done
+        fdog.checkData -g /home/runner/work/fDOG/fDOG/dt/genome_dir -b /home/runner/work/fDOG/fDOG/dt/blast_dir -w /home/runner/work/fDOG/fDOG/dt/weight_dir
         fdog.showTaxa
-        fdog.run --seqFile infile.fa --seqName test --refspec HUMAN@9606@3 --fasoff
+        fdog.run --seqFile infile.fa --seqName test --refspec HUMAN@9606@3
+        mkdir input
+        cp data/infile.fa input/01.fa
+        cp data/infile.fa input/02.fa
+        fdogs.run --input input --jobName test_multi --refspec HUMAN@9606@3
+        fdog.addTaxon -f input/01.fa -i 559292 -o test_addTaxon -c -a --cpus 4 --force --replace
+        ls
     - name: Deploy
       if: startsWith(github.event.ref, 'refs/tags')
       uses: casperdcl/deploy-pypi@v2
